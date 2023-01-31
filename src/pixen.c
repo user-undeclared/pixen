@@ -15,7 +15,6 @@
 #define USAGE "usage: pixen MULTIPLIER IMAGES..."
 
 #define MAX_SIZE_MULTIPLIER 128
-static_assert(MAX_SIZE_MULTIPLIER < UINT_MAX);
 
 bool parse_long(const char* string, long* result) {
     char* endptr;
