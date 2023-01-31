@@ -78,7 +78,10 @@ int main(int argc, char* argv[]) {
         }
 
         struct Image image;
-        if(!image_load(image_filepath, &image)) continue;
+        if(!image_load(image_filepath, &image)) {
+            fprintf(stderr, ERROR_PREFIX "failed to load image \"%s\"", image_filepath);
+            return 1;
+        }
 
         struct Image scaled_image;
         int error = image_scale(image, size_multiplier, &scaled_image);

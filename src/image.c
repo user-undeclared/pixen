@@ -9,8 +9,6 @@
 #include "image.h" 
 
 #define JPG_QUALITY 75
-//TODO: remove this and make these functions not print to stderr
-#define ERROR_PREFIX "ERROR - "
 
 #define UNREACHABLE assert(0 && "UNREACHABLE");
 
@@ -41,19 +39,13 @@ bool image_type_from_string(const char* file_extention, enum ImageType* result) 
 
 bool image_load(const char* image_filepath, struct Image* result) {
     FILE* image_file = fopen(image_filepath, "rb");
-    if(image_file == NULL) {
-        fprintf(stderr, ERROR_PREFIX "failed to open file \"%s\": %s\n", image_filepath, strerror(errno));
-        return false;
-    }
+    if(image_file == NULL) return false;
 
     int width, height, components;
     uint8_t* imagedata = stbi_load_from_file(image_file, &width, &height, &components, 0);
     fclose(image_file);
 
-    if(imagedata == NULL) {
-        fprintf(stderr, ERROR_PREFIX "\"%s\" is not an image\n", image_filepath);
-        return false;
-    }
+    if(imagedata == NULL) return false;
     
     *result = (struct Image) {
         .width = width,

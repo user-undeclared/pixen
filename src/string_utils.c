@@ -29,6 +29,8 @@ const char* get_filename_extention(const char* filepath) {
 }
 
 bool string_equal_ignore_case(const char* string1, const char* string2) {
+    if(string1 == NULL || string2 == NULL) return false;
+
     size_t string1_length = strlen(string1);
     size_t string2_length = strlen(string2);
     if(string1_length != string2_length) return false;
