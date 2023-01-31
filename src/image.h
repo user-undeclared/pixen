@@ -19,10 +19,9 @@ struct Image {
     uint8_t* data;
 };
 
-//TODO: change function name format from VERB_image to image_VERB
-bool load_image(const char* image_filepath, struct Image* result);
-void free_image(const struct Image image);
-int scale_image(struct Image image, unsigned size_multiplier, struct Image* scaled_image);
-void write_image(struct Image image, enum ImageType image_type);
+bool image_load(const char* image_filepath, struct Image* result);
+void image_free(const struct Image image);
+int image_scale(struct Image image, unsigned size_multiplier, struct Image* image_scaled);
+void print_image(struct Image image, enum ImageType image_type);
 
 #endif //_IMAGE_H

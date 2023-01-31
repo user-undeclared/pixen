@@ -39,7 +39,7 @@ bool image_type_from_string(const char* file_extention, enum ImageType* result) 
     return false;
 }
 
-bool load_image(const char* image_filepath, struct Image* result) {
+bool image_load(const char* image_filepath, struct Image* result) {
     FILE* image_file = fopen(image_filepath, "rb");
     if(image_file == NULL) {
         fprintf(stderr, ERROR_PREFIX "failed to open file \"%s\": %s\n", image_filepath, strerror(errno));
@@ -65,11 +65,11 @@ bool load_image(const char* image_filepath, struct Image* result) {
     return true;
 }
 
-void free_image(const struct Image image) {
+void image_free(const struct Image image) {
     stbi_image_free(image.data);
 }
 
-int scale_image(struct Image image, unsigned size_multiplier, struct Image* scaled_image) {
+int image_scale(struct Image image, unsigned size_multiplier, struct Image* scaled_image) {
     size_t scaled_image_size = image.width * image.height * image.components * size_multiplier;
     uint8_t* scaled_imagedata = malloc(scaled_image_size);
     if(scaled_imagedata == NULL) return errno;
@@ -85,30 +85,29 @@ int scale_image(struct Image image, unsigned size_multiplier, struct Image* scal
     return 0;
 }
 
-//TODO: rename this to print_buffer and print_image
-void write_to_file(void* file_pointer, void* data, int size) {
+void print_buffer(void* file_pointer, void* data, int size) {
     FILE* file = (FILE*) file_pointer;
     fwrite(data, 1, size, file);
 }
 
-void write_image(struct Image image, enum ImageType image_type) {
+void print_image(struct Image image, enum ImageType image_type) {
     void* context = (void*) stdout;
 
     switch(image_type) {
         case IMAGETYPE_PNG:
-            stbi_write_png_to_func(write_to_file, context, image.width, image.height, image.components, image.data, 0);
+            stbi_write_png_to_func(print_buffer, context, image.width, image.height, image.components, image.data, 0);
             return;
         case IMAGETYPE_BMP:
-            stbi_write_bmp_to_func(write_to_file, context, image.width, image.height, image.components, image.data);
+            stbi_write_bmp_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
             return;
         case IMAGETYPE_TGA:
-            stbi_write_tga_to_func(write_to_file, context, image.width, image.height, image.components, image.data);
+            stbi_write_tga_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
             return;
         case IMAGETYPE_JPG:
-            stbi_write_jpg_to_func(write_to_file, context, image.width, image.height, image.components, image.data, JPG_QUALITY);
+            stbi_write_jpg_to_func(print_buffer, context, image.width, image.height, image.components, image.data, JPG_QUALITY);
             return;
         case IMAGETYPE_HDR:
-            stbi_write_bmp_to_func(write_to_file, context, image.width, image.height, image.components, image.data);
+            stbi_write_bmp_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
             return;
         default:
             UNREACHABLE;

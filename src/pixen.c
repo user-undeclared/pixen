@@ -78,17 +78,17 @@ int main(int argc, char* argv[]) {
         }
 
         struct Image image;
-        if(!load_image(image_filepath, &image)) continue;
+        if(!image_load(image_filepath, &image)) continue;
 
         struct Image scaled_image;
-        int error = scale_image(image, size_multiplier, &scaled_image);
-        free_image(image);
+        int error = image_scale(image, size_multiplier, &scaled_image);
+        image_free(image);
         if(error != 0) {
             fprintf(stderr, ERROR_PREFIX "failed to scale up \"%s\": %s\n", image_filepath, strerror(error));
             continue;
         }
 
-        write_image(scaled_image, image_type);
+        print_image(scaled_image, image_type);
         free(scaled_image.data);
     }
 
