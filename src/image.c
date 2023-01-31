@@ -37,14 +37,9 @@ bool image_type_from_string(const char* file_extention, enum ImageType* result) 
     return false;
 }
 
-bool image_load(const char* image_filepath, struct Image* result) {
-    FILE* image_file = fopen(image_filepath, "rb");
-    if(image_file == NULL) return false;
-
+bool image_load(FILE* image_file, struct Image* result) {
     int width, height, components;
     uint8_t* imagedata = stbi_load_from_file(image_file, &width, &height, &components, 0);
-    fclose(image_file);
-
     if(imagedata == NULL) return false;
     
     *result = (struct Image) {

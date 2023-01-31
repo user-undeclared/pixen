@@ -71,16 +71,24 @@ int main(int argc, char* argv[]) {
         const char* image_filepath = image_filepath_array[index];
         const char* image_file_extention = get_filename_extention(image_filepath);
 
+        FILE* image_file = fopen(image_filepath, "rb");
+        if(image_file == NULL) {
+            fprintf(stderr, ERROR_PREFIX "failed to open file \"%s\": %s\n", image_filepath, strerror(errno));
+            return 1;
+        }
+
+        struct Image image;
+        bool loaded_image = image_load(image_file, &image);
+        fclose(image_file);
+        if(!loaded_image) {
+            fprintf(stderr, ERROR_PREFIX "\"%s\" is not an image\n", image_filepath);
+            return 1;
+        }
+
         enum ImageType image_type;
         if(!image_type_from_string(image_file_extention, &image_type)) {
             fprintf(stderr, ERROR_PREFIX "unsupported image type \"%s\"\n", image_file_extention);
             continue;
-        }
-
-        struct Image image;
-        if(!image_load(image_filepath, &image)) {
-            fprintf(stderr, ERROR_PREFIX "failed to load image \"%s\"", image_filepath);
-            return 1;
         }
 
         struct Image scaled_image;

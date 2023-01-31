@@ -19,7 +19,7 @@ struct Image {
     uint8_t* data;
 };
 
-bool image_load(const char* image_filepath, struct Image* result);
+bool image_load(FILE* image_file, struct Image* result);
 void image_free(const struct Image image);
 int image_scale(struct Image image, unsigned size_multiplier, struct Image* image_scaled);
 void print_image(struct Image image, enum ImageType image_type);
