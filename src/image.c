@@ -57,14 +57,26 @@ void image_free(const struct Image image) {
 }
 
 int image_scale(struct Image image, unsigned size_multiplier, struct Image* scaled_image) {
-    size_t scaled_image_size = image.width * image.height * image.components * size_multiplier;
+    unsigned scaled_width = image.width * size_multiplier;
+    unsigned scaled_height = image.height * size_multiplier;
+    size_t scaled_image_size = scaled_width * scaled_height * image.components;
+
     uint8_t* scaled_imagedata = malloc(scaled_image_size);
     if(scaled_imagedata == NULL) return errno;
 
-    memcpy(scaled_imagedata, image.data, image.width * image.height * image.components);
+    for(unsigned column = 0; column < scaled_width; column++) {
+        for(unsigned row = 0; row < scaled_height; row++) {
+            unsigned data_index = ((row / size_multiplier) * image.width + (column / size_multiplier)) * image.components;
+            unsigned scaled_index = (row * scaled_width + column) * image.components;
+            for(unsigned component = 0; component < image.components; component++) {
+                scaled_imagedata[scaled_index + component] = image.data[data_index + component];
+            }
+        }
+    }
+        
     *scaled_image = (struct Image) {
-        .width = image.width * size_multiplier,
-        .height = image.height * size_multiplier,
+        .width = scaled_width,
+        .height = scaled_height,
         .components = image.components,
         .size = scaled_image_size,
         .data = scaled_imagedata

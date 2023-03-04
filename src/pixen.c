@@ -90,6 +90,12 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
+        if(size_multiplier == 1) {
+            print_image(image, image_type);
+            image_free(image);
+            continue;
+        }
+
         struct Image scaled_image;
         int error = image_scale(image, size_multiplier, &scaled_image);
         image_free(image);
