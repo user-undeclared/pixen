@@ -1,40 +1,47 @@
 #include <errno.h>
+#include <assert.h>
+#include <ctype.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-#include "string_utils.h"
 #include "image.h" 
 
-#define JPG_QUALITY 75
+bool string_equal_ignore_case(const char* string1, const char* string2) {
+    if(string1 == NULL || string2 == NULL) return false;
 
-#define UNREACHABLE assert(0 && "UNREACHABLE");
+    size_t string1_length = strlen(string1);
+    size_t string2_length = strlen(string2);
+    if(string1_length != string2_length) return false;
+
+    for(size_t index = 0; index < string1_length; index++) {
+        if(tolower(string1[index]) != tolower(string2[index])) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 bool image_type_from_string(const char* file_extention, enum ImageType* result) {
-    if(string_equal_ignore_case(file_extention, "png")) {
-        *result = IMAGETYPE_PNG;
-        return true;
-    }
-    if(string_equal_ignore_case(file_extention, "bmp")) {
-        *result = IMAGETYPE_BMP;
-        return true;
-    }
-    if(string_equal_ignore_case(file_extention, "tga")) {
-        *result = IMAGETYPE_TGA;
-        return true;
-    }
-    if(string_equal_ignore_case(file_extention, "hdr")) {
-        *result = IMAGETYPE_HDR;
-        return true;
-    }
-    if(string_equal_ignore_case(file_extention, "jpg") || string_equal_ignore_case(file_extention, "jpeg")) {
-        *result = IMAGETYPE_JPG;
-        return true;
-    }
+    int image_type = -1;
 
-    return false;
+    if(string_equal_ignore_case(file_extention, "png"))
+        image_type = IMAGETYPE_PNG;
+    else if(string_equal_ignore_case(file_extention, "bmp"))
+        image_type = IMAGETYPE_BMP;
+    else if(string_equal_ignore_case(file_extention, "tga"))
+        image_type = IMAGETYPE_TGA;
+    else if(string_equal_ignore_case(file_extention, "hdr"))
+        image_type = IMAGETYPE_HDR;
+    else if(string_equal_ignore_case(file_extention, "jpg") || string_equal_ignore_case(file_extention, "jpeg"))
+        image_type = IMAGETYPE_JPG;
+
+    if(image_type == -1) return false;
+    *result = image_type;
+    return true;
 }
 
 bool image_load(FILE* image_file, struct Image* result) {
@@ -89,7 +96,7 @@ void print_buffer(void* file_pointer, void* data, int size) {
     fwrite(data, 1, size, file);
 }
 
-void print_image(struct Image image, enum ImageType image_type) {
+void print_image(struct Image image, enum ImageType image_type, unsigned jpg_quality) {
     void* context = (void*) stdout;
 
     switch(image_type) {
@@ -103,13 +110,13 @@ void print_image(struct Image image, enum ImageType image_type) {
             stbi_write_tga_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
             return;
         case IMAGETYPE_JPG:
-            stbi_write_jpg_to_func(print_buffer, context, image.width, image.height, image.components, image.data, JPG_QUALITY);
+            stbi_write_jpg_to_func(print_buffer, context, image.width, image.height, image.components, image.data, jpg_quality);
             return;
         case IMAGETYPE_HDR:
             stbi_write_bmp_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
             return;
         default:
-            UNREACHABLE;
+            assert(0 && "UNREACHABLE");
     }
 }
 

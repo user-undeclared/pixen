@@ -5,52 +5,51 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
-#include <assert.h>
-#include <ctype.h>
 
-#include "string_utils.h"
 #include "image.h"
 
-#define ERROR_PREFIX "ERROR - "
+#define MAX_SIZE_MULTIPLIER 128
+#define JPG_QUALITY 75
+
+#define ERROR_PREFIX "error: "
 #define USAGE "usage: pixen MULTIPLIER IMAGES..."
 
-#define MAX_SIZE_MULTIPLIER 128
+const char* get_filename_extention(const char* filepath) {
+    for(size_t index = strlen(filepath); index > 0; index--) {
+        if(filepath[index - 1] == '.') {
+            return &filepath[index];
+        }
+    }
+    return NULL;
+}
 
-bool parse_long(const char* string, long* result) {
-    char* endptr;
-
+bool parse_size_multiplier(const char* string, unsigned* result) {
+    char* end_pointer;
     errno = 0;
-    const long parsed_long = strtol(string, &endptr, 0);
+    long parsed_value = strtol(string, &end_pointer, 0);
 
     if(errno == ERANGE) {
-        if(parsed_long == LONG_MIN) fprintf(stderr, "ERROR: %s is too small to parse\n", string);
+        if(parsed_value == LONG_MIN) fprintf(stderr, "ERROR: %s is too small to parse\n", string);
         else fprintf(stderr, ERROR_PREFIX "%s is too big to parse\n", string);
         return false;
     }
 
-    if(*endptr != '\0') {
+    if(*end_pointer != '\0') {
         fprintf(stderr, ERROR_PREFIX "\"%s\" is not a number\n", string);
         return false;
     }
 
-    *result = parsed_long;
-    return true;
-}
-
-bool parse_size_multiplier(const char* string, unsigned* result) {
-    long size_multiplier;
-    if(!parse_long(string, &size_multiplier)) return false;
-
-    if(size_multiplier < 0) {
-        fputs(ERROR_PREFIX "size multiplier cannot be negative\n", stderr);
+    if(parsed_value < 1) {
+        fputs(ERROR_PREFIX "size multiplier must be greater than zero\n", stderr);
         return false;
     }
-    if(size_multiplier > MAX_SIZE_MULTIPLIER) {
+
+    if(parsed_value > MAX_SIZE_MULTIPLIER) {
         fprintf(stderr, ERROR_PREFIX "scale multiplier too big (max is %i)\n", MAX_SIZE_MULTIPLIER);
         return false;
     }
     
-    *result = (unsigned) size_multiplier;
+    *result = (unsigned) parsed_value;
     return true; 
 }
 
@@ -91,7 +90,7 @@ int main(int argc, char* argv[]) {
         }
 
         if(size_multiplier == 1) {
-            print_image(image, image_type);
+            print_image(image, image_type, JPG_QUALITY);
             image_free(image);
             continue;
         }
@@ -104,7 +103,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-        print_image(scaled_image, image_type);
+        print_image(scaled_image, image_type, JPG_QUALITY);
         free(scaled_image.data);
     }
 
