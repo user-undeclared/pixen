@@ -11,10 +11,10 @@
 #define MAX_SIZE_MULTIPLIER 128
 #define JPG_QUALITY 75
 
+#define USAGE "usage: pixen MULTIPLIER IMAGE"
 #define ERROR_PREFIX "error: "
-#define USAGE "usage: pixen MULTIPLIER IMAGES..."
 
-const char* get_filename_extention(const char* filepath) {
+const char* filename_extention(const char* filepath) {
     for(size_t index = strlen(filepath); index > 0; index--) {
         if(filepath[index - 1] == '.') {
             return &filepath[index];
@@ -39,16 +39,16 @@ bool parse_size_multiplier(const char* string, unsigned* result) {
         return false;
     }
 
-    if(parsed_value < 1) {
-        fputs(ERROR_PREFIX "size multiplier must be greater than zero\n", stderr);
-        return false;
-    }
-
     if(parsed_value > MAX_SIZE_MULTIPLIER) {
         fprintf(stderr, ERROR_PREFIX "scale multiplier too big (max is %i)\n", MAX_SIZE_MULTIPLIER);
         return false;
     }
     
+    if(parsed_value < 2) {
+        fputs(ERROR_PREFIX "size multiplier must be greater than one\n", stderr);
+        return false;
+    }
+
     *result = (unsigned) parsed_value;
     return true; 
 }
@@ -62,50 +62,39 @@ int main(int argc, char* argv[]) {
     unsigned size_multiplier;
     if(!parse_size_multiplier(argv[1], &size_multiplier)) return 1;
 
-    unsigned image_filename_count = argc - 2;
-    char** image_filepath_array = &argv[2];
+    const char* image_filepath = argv[2];
+    const char* image_file_extention = filename_extention(image_filepath);
 
-    for(unsigned index = 0; index < image_filename_count; index++) {
-        const char* image_filepath = image_filepath_array[index];
-        const char* image_file_extention = get_filename_extention(image_filepath);
-
-        FILE* image_file = fopen(image_filepath, "rb");
-        if(image_file == NULL) {
-            fprintf(stderr, ERROR_PREFIX "failed to open file \"%s\": %s\n", image_filepath, strerror(errno));
-            return 1;
-        }
-
-        struct Image image;
-        bool loaded_image = image_load(image_file, &image);
-        fclose(image_file);
-        if(!loaded_image) {
-            fprintf(stderr, ERROR_PREFIX "\"%s\" is not an image\n", image_filepath);
-            return 1;
-        }
-
-        enum ImageType image_type;
-        if(!image_type_from_string(image_file_extention, &image_type)) {
-            fprintf(stderr, ERROR_PREFIX "unsupported image type \"%s\"\n", image_file_extention);
-            continue;
-        }
-
-        if(size_multiplier == 1) {
-            print_image(image, image_type, JPG_QUALITY);
-            image_free(image);
-            continue;
-        }
-
-        struct Image scaled_image;
-        int error = image_scale(image, size_multiplier, &scaled_image);
-        image_free(image);
-        if(error != 0) {
-            fprintf(stderr, ERROR_PREFIX "failed to scale up \"%s\": %s\n", image_filepath, strerror(error));
-            continue;
-        }
-
-        print_image(scaled_image, image_type, JPG_QUALITY);
-        free(scaled_image.data);
+    FILE* image_file = fopen(image_filepath, "rb");
+    if(image_file == NULL) {
+        fprintf(stderr, ERROR_PREFIX "failed to open file \"%s\": %s\n", image_filepath, strerror(errno));
+        return 1;
     }
 
+    enum image_type original_image_type;
+    if(!image_type_from_string(image_file_extention, &original_image_type)) {
+        fprintf(stderr, ERROR_PREFIX "unsupported image type \"%s\"\n", image_file_extention);
+        return 1;
+    }
+
+    struct image original_image;
+    bool image_was_loaded = image_load(image_file, &original_image);
+    fclose(image_file);
+    if(!image_was_loaded) {
+        fprintf(stderr, ERROR_PREFIX "\"%s\" is not an image\n", image_filepath);
+        return 1;
+    }
+
+    struct image scaled_image;
+    int error = image_scale(original_image, size_multiplier, &scaled_image);
+    image_free(original_image);
+    if(error != 0) {
+        fprintf(stderr, ERROR_PREFIX "failed to scale up \"%s\": %s\n", image_filepath, strerror(error));
+        return 1;
+    }
+
+    print_image(scaled_image, original_image_type, JPG_QUALITY);
+
+    free(scaled_image.data);
     return 0;
 }

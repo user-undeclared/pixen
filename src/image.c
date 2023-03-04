@@ -25,7 +25,7 @@ bool string_equal_ignore_case(const char* string1, const char* string2) {
     return true;
 }
 
-bool image_type_from_string(const char* file_extention, enum ImageType* result) {
+bool image_type_from_string(const char* file_extention, enum image_type* result) {
     int image_type = -1;
 
     if(string_equal_ignore_case(file_extention, "png"))
@@ -44,12 +44,12 @@ bool image_type_from_string(const char* file_extention, enum ImageType* result) 
     return true;
 }
 
-bool image_load(FILE* image_file, struct Image* result) {
+bool image_load(FILE* image_file, struct image* result) {
     int width, height, components;
     uint8_t* imagedata = stbi_load_from_file(image_file, &width, &height, &components, 0);
     if(imagedata == NULL) return false;
     
-    *result = (struct Image) {
+    *result = (struct image) {
         .width = width,
         .height = height,
         .components = components,
@@ -59,32 +59,33 @@ bool image_load(FILE* image_file, struct Image* result) {
     return true;
 }
 
-void image_free(const struct Image image) {
+void image_free(struct image image) {
     stbi_image_free(image.data);
 }
 
-int image_scale(struct Image image, unsigned size_multiplier, struct Image* scaled_image) {
-    unsigned scaled_width = image.width * size_multiplier;
-    unsigned scaled_height = image.height * size_multiplier;
-    size_t scaled_image_size = scaled_width * scaled_height * image.components;
+int image_scale(const struct image source_image, unsigned size_multiplier, struct image* scaled_image) {
+    unsigned scaled_width = source_image.width * size_multiplier;
+    unsigned scaled_height = source_image.height * size_multiplier;
+    size_t scaled_image_size = scaled_width * scaled_height * source_image.components;
 
     uint8_t* scaled_imagedata = malloc(scaled_image_size);
     if(scaled_imagedata == NULL) return errno;
 
     for(unsigned column = 0; column < scaled_width; column++) {
         for(unsigned row = 0; row < scaled_height; row++) {
-            unsigned data_index = ((row / size_multiplier) * image.width + (column / size_multiplier)) * image.components;
-            unsigned scaled_index = (row * scaled_width + column) * image.components;
-            for(unsigned component = 0; component < image.components; component++) {
-                scaled_imagedata[scaled_index + component] = image.data[data_index + component];
+            unsigned data_index = ((row / size_multiplier) * source_image.width + (column / size_multiplier)) * source_image.components;
+            unsigned scaled_index = (row * scaled_width + column) * source_image.components;
+
+            for(unsigned component = 0; component < source_image.components; component++) {
+                scaled_imagedata[scaled_index + component] = source_image.data[data_index + component];
             }
         }
     }
         
-    *scaled_image = (struct Image) {
+    *scaled_image = (struct image) {
         .width = scaled_width,
         .height = scaled_height,
-        .components = image.components,
+        .components = source_image.components,
         .size = scaled_image_size,
         .data = scaled_imagedata
     };
@@ -96,7 +97,7 @@ void print_buffer(void* file_pointer, void* data, int size) {
     fwrite(data, 1, size, file);
 }
 
-void print_image(struct Image image, enum ImageType image_type, unsigned jpg_quality) {
+void print_image(const struct image image, enum image_type image_type, unsigned jpg_quality) {
     void* context = (void*) stdout;
 
     switch(image_type) {
