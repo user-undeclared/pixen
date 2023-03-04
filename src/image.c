@@ -53,7 +53,6 @@ bool image_load(FILE* image_file, struct image* result) {
         .width = width,
         .height = height,
         .components = components,
-        .size = width * height * components,
         .data = imagedata
     };
     return true;
@@ -86,7 +85,6 @@ int image_scale(const struct image source_image, unsigned size_multiplier, struc
         .width = scaled_width,
         .height = scaled_height,
         .components = source_image.components,
-        .size = scaled_image_size,
         .data = scaled_imagedata
     };
     return 0;
@@ -97,24 +95,22 @@ void print_buffer(void* file_pointer, void* data, int size) {
     fwrite(data, 1, size, file);
 }
 
-void print_image(const struct image image, enum image_type image_type, unsigned jpg_quality) {
-    void* context = (void*) stdout;
-
+void image_write_to_file(const struct image image, FILE* file, enum image_type image_type, unsigned jpg_quality) {
     switch(image_type) {
         case IMAGETYPE_PNG:
-            stbi_write_png_to_func(print_buffer, context, image.width, image.height, image.components, image.data, 0);
+            stbi_write_png_to_func(print_buffer, (void*) file, image.width, image.height, image.components, image.data, 0);
             return;
         case IMAGETYPE_BMP:
-            stbi_write_bmp_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
+            stbi_write_bmp_to_func(print_buffer, (void*) file, image.width, image.height, image.components, image.data);
             return;
         case IMAGETYPE_TGA:
-            stbi_write_tga_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
+            stbi_write_tga_to_func(print_buffer, (void*) file, image.width, image.height, image.components, image.data);
             return;
         case IMAGETYPE_JPG:
-            stbi_write_jpg_to_func(print_buffer, context, image.width, image.height, image.components, image.data, jpg_quality);
+            stbi_write_jpg_to_func(print_buffer, (void*) file, image.width, image.height, image.components, image.data, jpg_quality);
             return;
         case IMAGETYPE_HDR:
-            stbi_write_bmp_to_func(print_buffer, context, image.width, image.height, image.components, image.data);
+            stbi_write_bmp_to_func(print_buffer, (void*) file, image.width, image.height, image.components, image.data);
             return;
         default:
             assert(0 && "UNREACHABLE");

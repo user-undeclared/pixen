@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    print_image(scaled_image, original_image_type, JPG_QUALITY);
+    image_write_to_file(scaled_image, stdout, original_image_type, JPG_QUALITY);
 
     free(scaled_image.data);
     return 0;

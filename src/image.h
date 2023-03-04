@@ -16,13 +16,12 @@ bool image_type_from_string(const char* file_extention, enum image_type* result)
 
 struct image {
     unsigned width, height, components;
-    size_t size;
     uint8_t* data;
 };
 
 bool image_load(FILE* image_file, struct image* result);
 void image_free(struct image image);
 int image_scale(const struct image source_image, unsigned size_multiplier, struct image* image_scaled);
-void print_image(const struct image image, enum image_type image_type, unsigned jpg_quality);
+void image_write_to_file(const struct image image, FILE* file, enum image_type image_type, unsigned jpg_quality);
 
 #endif /* _IMAGE_H */
