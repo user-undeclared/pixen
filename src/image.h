@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-/* these correspond to the image types supported by stb_image and stb_image_write */
+/* these correspond to the image types supported by both stb_image and stb_image_write */
 enum image_type {
     IMAGETYPE_PNG = 0,
     IMAGETYPE_BMP,

@@ -46,15 +46,11 @@ bool image_type_from_string(const char* file_extention, enum image_type* result)
 
 bool image_load(FILE* image_file, struct image* result) {
     int width, height, components;
+
     uint8_t* imagedata = stbi_load_from_file(image_file, &width, &height, &components, 0);
     if(imagedata == NULL) return false;
     
-    *result = (struct image) {
-        .width = width,
-        .height = height,
-        .components = components,
-        .data = imagedata
-    };
+    *result = (struct image) { width, height, components, imagedata };
     return true;
 }
 
@@ -81,12 +77,7 @@ int image_scale(const struct image source_image, unsigned size_multiplier, struc
         }
     }
         
-    *scaled_image = (struct image) {
-        .width = scaled_width,
-        .height = scaled_height,
-        .components = source_image.components,
-        .data = scaled_imagedata
-    };
+    *scaled_image = (struct image) { scaled_width, scaled_height, source_image.components, scaled_imagedata };
     return 0;
 }
 
